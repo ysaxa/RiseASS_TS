@@ -1,0 +1,15 @@
+body {
+	background-color: black;
+	color: white;
+}
+
+.skillListContainer {
+	margin: 1em;
+}
+.removeSkillButton {
+	display: inline-block;
+	margin: 0.5em;
+}
+.skillText {
+	display: inline-block;
+}

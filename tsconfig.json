@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"strict": true,
+		"target": "ESNext",
+		"sourceMap": true,
+
+		"jsx": "react",
+
+		"outDir": "ts-built",
+		"rootDir": "src"
+	},
+	"exclude":["exclude"]
+}

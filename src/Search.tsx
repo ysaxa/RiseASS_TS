@@ -1,3 +1,18 @@
+class ArmorSet {
+	head: string
+	chest: string
+	arms: string
+	waist: string
+	legs: string
+	constructor(head: string, chest: string, arms: string, waist: string, legs: string) {
+		this.head = head
+		this.chest = chest
+		this.arms = arms
+		this.waist = waist
+		this.legs = legs
+	}
+}
+
 class Results {
 	list: ArmorSet[] = []
 }

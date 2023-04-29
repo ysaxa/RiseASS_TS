@@ -1,3 +1,29 @@
+declare namespace JSX {
+	interface IntrinsicElements {
+		[tagname: string]: any
+	}
+}
+
+abstract class JsxComponent {
+	attributes: {[key: string]: string}|null
+	constructor(attributes: {[key: string]: string}|null) {
+		this.attributes = attributes
+	}
+
+	abstract render(): HTMLElement
+}
+
+function h<K extends keyof HTMLElementTagNameMap>(arg1: K|(new (attributes:{[key: string]: string}|null)=>JsxComponent), attributes: {[key: string]: string}|null, ...content: (string|HTMLElement)[]) {
+	if (typeof(arg1) === 'string') {
+		let element = document.createElement(arg1)
+		content?.forEach(child => element.append(child))
+		attributes && Object.keys(attributes).forEach(key => element.setAttribute(key, attributes[key]))
+		return element
+	} else {
+		return new arg1(attributes).render()
+	}
+}
+
 function div(fn:(d:HTMLDivElement)=>void): HTMLDivElement {
 	let div: HTMLDivElement = document.createElement('div')
 	fn(div)

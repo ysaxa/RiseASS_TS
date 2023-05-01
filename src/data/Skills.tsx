@@ -1,3 +1,12 @@
+interface EquipmentPiece {
+	name: string,
+	place: number
+	slotSizes: number[]
+	skills: { [skill: string]: number }
+}
+
+type skillLevels = { [skill: string]: number }
+
 var skills: { [skill: string]: number } = {
 	"Affinity Sliding": 1,
 	"Botanist": 4,

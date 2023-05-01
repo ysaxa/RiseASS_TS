@@ -60,11 +60,68 @@ function filterArmor(wantedSkills: string[]): ArmorPiece[] {
 	return [...directlyRelevant, ...bestDecoSlots]
 }
 
-function search(wantedSkills: { [skill: string]: number }, results: Results): void {
-	let relevantArmor: ArmorPiece[] = filterArmor(Object.keys(wantedSkills))
-	results.list = [
-		new ArmorSet(relevantArmor[0].name, relevantArmor[1].name, relevantArmor[2].name, relevantArmor[3].name, relevantArmor[4].name),
-		new ArmorSet(relevantArmor[5].name, relevantArmor[6].name, relevantArmor[7].name, relevantArmor[8].name, relevantArmor[9].name),
-	]
+function doSearch(equipmentPerPlace: EquipmentPiece[][], wantedSkills: skillLevels): ArmorSet[] {
+	let localResults: ArmorSet[] = []
+
+	let maxResults = 100
+
+	equipmentPerPlace[0]?.forEach(equipment=>{ // head
+		if (localResults.length > maxResults) return
+		let pieces0 = [equipment]
+		equipmentPerPlace[1]?.forEach(equipment=>{ // chest
+			if (localResults.length > maxResults) return
+			let pieces1 = pieces0.concat(equipment)
+			equipmentPerPlace[2]?.forEach(equipment=>{ // arms
+				if (localResults.length > maxResults) return
+				let pieces2 = pieces1.concat(equipment)
+				equipmentPerPlace[3]?.forEach(equipment=>{ // waist
+					if (localResults.length > maxResults) return
+					let pieces3 = pieces2.concat(equipment)
+					equipmentPerPlace[4]?.forEach(equipment=>{ // legs
+						if (localResults.length > maxResults) return
+						let pieces4 = pieces3.concat(equipment)
+						equipmentPerPlace[5]?.forEach(equipment=>{ // charms
+							if (localResults.length > maxResults) return
+							let pieces5 = pieces4.concat(equipment)
+
+							// TODO decos
+
+							let pieces: EquipmentPiece[] = [...pieces5]
+
+							if (Object.keys(wantedSkills).some(skill => wantedSkills[skill] > pieces.map(piece=>piece.skills[skill] || 0).reduce((a,b)=>a+b, 0))) return
+							localResults = localResults.concat(new ArmorSet(
+								(pieces4[0] as ArmorPiece).name,
+								(pieces4[1] as ArmorPiece).name,
+								(pieces4[2] as ArmorPiece).name,
+								(pieces4[3] as ArmorPiece).name,
+								(pieces4[4] as ArmorPiece).name,
+							))
+						})
+					})
+				})
+			})
+		})
+	})
+
+	return localResults
+}
+
+function search(wantedSkills: skillLevels, results: Results): void {
+	let relevantEquipment: EquipmentPiece[] = filterArmor(Object.keys(wantedSkills))
+
+	let equipmentPerPlace: EquipmentPiece[][] = [...new Set(armor.map(a=>a.place))].map(place => relevantEquipment.filter(a=>a.place === place))
+
+	// add dummy charm
+	// TODO add real charms according to some sonfiguration somewhere
+	equipmentPerPlace = [...equipmentPerPlace, [{
+		name: "dummy charm",
+		place: 5,
+		slotSizes: [],
+		skills: {},
+	} as EquipmentPiece]]
+
+	console.log(`relevant piecesper place: ${equipmentPerPlace.map(p=>`${p.length}`).join(', ')}`)
+
+	results.list = doSearch(equipmentPerPlace, wantedSkills)
 	document.body.dispatchEvent(new Event(EVENT_updateResults));
 }

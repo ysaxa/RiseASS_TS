@@ -1,7 +1,11 @@
-type Jewel = {
-	name: string,
+interface Jewel extends EquipmentPiece {
 	slotSize: number,
 	skills: { [skill: string]: number }
+}
+
+function addDefaultSlotSizes(o: any) {
+	o.slotSizes = []
+	return o
 }
 
 var jewels: Jewel[] = [
@@ -1650,4 +1654,4 @@ var jewels: Jewel[] = [
 			"LV4 Slot Skill": 1
 		}
 	}
-]
+].map(o => addDefaultSlotSizes(o))

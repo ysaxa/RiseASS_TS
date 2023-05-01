@@ -1,9 +1,5 @@
-type ArmorPiece = {
-	name: string
-	place: number
+interface ArmorPiece extends EquipmentPiece {
 	maxDef: number
-	slotSizes: number[]
-	skills: { [skill: string]: number }
 	elemRes: number[]
 }
 

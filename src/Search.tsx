@@ -17,6 +17,10 @@ class Results {
 	list: ArmorSet[] = []
 }
 
+function range(n: number) {
+	return [...Array(n).keys()]
+}
+
 function filterArmor(wantedSkills: string[]): ArmorPiece[] {
 	function isStrictlyBetter(champion: ArmorPiece, candidate: ArmorPiece): boolean {
 		// [4] isn't strictly better than [1,1]
@@ -31,7 +35,7 @@ function filterArmor(wantedSkills: string[]): ArmorPiece[] {
 
 		let orderedChampion: number[] = [...champion.slotSizes].sort()
 		let orderedCandidate: number[] = [...candidate.slotSizes].sort()
-		return [...Array(orderedCandidate.length).keys()].every(i => orderedChampion[i] >= orderedCandidate[i])
+		return range(orderedCandidate.length).every(i => orderedChampion[i] >= orderedCandidate[i])
 	}
 
 	// armor pieces that contribute to the wanted skills
@@ -60,7 +64,34 @@ function filterArmor(wantedSkills: string[]): ArmorPiece[] {
 	return [...directlyRelevant, ...bestDecoSlots]
 }
 
-function doSearch(equipmentPerPlace: EquipmentPiece[][], wantedSkills: skillLevels): ArmorSet[] {
+function filterDecos(wantedSkills: string[]): Jewel[] {
+	let relevantJewels = jewels.filter(j => Object.keys(j.skills).some(jewelSkill => wantedSkills.includes(jewelSkill)))
+	// TODO can probably filter more
+	return relevantJewels
+}
+
+function doSearch(wantedSkills: skillLevels): ArmorSet[] {
+	let relevantEquipment: EquipmentPiece[] = filterArmor(Object.keys(wantedSkills))
+
+	let equipmentPerPlace: EquipmentPiece[][] = [...new Set(armor.map(a=>a.place))].map(place => relevantEquipment.filter(a=>a.place === place))
+
+	// add dummy charm
+	// TODO add real charms according to some configuration somewhere
+	equipmentPerPlace = [...equipmentPerPlace, [{
+		name: "dummy charm",
+		place: 5,
+		slotSizes: [],
+		skills: {},
+	} as EquipmentPiece]]
+
+	console.log(`relevant piecesper place: ${equipmentPerPlace.map(p=>`${p.length}`).join(', ')}`)
+
+	let relevantDecos = filterDecos(Object.keys(wantedSkills))
+	console.log(relevantDecos.map(j => j.name).join(', '))
+	let decoArray = relevantDecos.map(j => range(Math.floor(Math.max(...Object.keys(j.skills).map(skillName => skills[skillName]/j.skills[skillName])))).map(i=>j)).flat()
+	console.log(decoArray.length)
+	console.log(decoArray.map(j => j.name).join(', '))
+
 	let localResults: ArmorSet[] = []
 
 	let maxResults = 100
@@ -83,10 +114,10 @@ function doSearch(equipmentPerPlace: EquipmentPiece[][], wantedSkills: skillLeve
 						equipmentPerPlace[5]?.forEach(equipment=>{ // charms
 							if (localResults.length > maxResults) return
 							let pieces5 = pieces4.concat(equipment)
+							let pieces: EquipmentPiece[] = [...pieces5]
 
 							// TODO decos
-
-							let pieces: EquipmentPiece[] = [...pieces5]
+							let allSlots: number[] = pieces.map(e=>e.slotSizes).flat()
 
 							if (Object.keys(wantedSkills).some(skill => wantedSkills[skill] > pieces.map(piece=>piece.skills[skill] || 0).reduce((a,b)=>a+b, 0))) return
 							localResults = localResults.concat(new ArmorSet(
@@ -107,21 +138,6 @@ function doSearch(equipmentPerPlace: EquipmentPiece[][], wantedSkills: skillLeve
 }
 
 function search(wantedSkills: skillLevels, results: Results): void {
-	let relevantEquipment: EquipmentPiece[] = filterArmor(Object.keys(wantedSkills))
-
-	let equipmentPerPlace: EquipmentPiece[][] = [...new Set(armor.map(a=>a.place))].map(place => relevantEquipment.filter(a=>a.place === place))
-
-	// add dummy charm
-	// TODO add real charms according to some sonfiguration somewhere
-	equipmentPerPlace = [...equipmentPerPlace, [{
-		name: "dummy charm",
-		place: 5,
-		slotSizes: [],
-		skills: {},
-	} as EquipmentPiece]]
-
-	console.log(`relevant piecesper place: ${equipmentPerPlace.map(p=>`${p.length}`).join(', ')}`)
-
-	results.list = doSearch(equipmentPerPlace, wantedSkills)
+	results.list = doSearch(wantedSkills)
 	document.body.dispatchEvent(new Event(EVENT_updateResults));
 }
